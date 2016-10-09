@@ -1,0 +1,26 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+OBJ_SRCS := 
+S_SRCS := 
+ASM_SRCS := 
+C_SRCS := 
+S_UPPER_SRCS := 
+O_SRCS := 
+EXECUTABLES := 
+OBJS := 
+S_UPPER_DEPS := 
+C_DEPS := 
+
+# Every subdirectory with source files must be described here
+SUBDIRS := \
+startup \
+src \
+Middlewares/ST/STemWin/OS \
+Middlewares/ST/STemWin/Config \
+HAL_Driver/Src \
+Fonts/src \
+Board/src \
+Application/src \
+
