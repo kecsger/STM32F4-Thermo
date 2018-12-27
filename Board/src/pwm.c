@@ -175,7 +175,7 @@ void LCD_BacklightTimerStart(uint8_t updateRate)
 	TIM_HandleDef_LCDBcklight.Init.RepetitionCounter = 0;
 
 	/* Setting IRQ for timer */
-	HAL_NVIC_SetPriority(TIM4_IRQn, 2, 3);
+	HAL_NVIC_SetPriority(TIM4_IRQn, 8, 3);
 	HAL_NVIC_EnableIRQ(TIM4_IRQn);
 
 	if(HAL_TIM_Base_Init(&TIM_HandleDef_LCDBcklight) != HAL_OK)
@@ -206,13 +206,13 @@ void LCD_FadeOutTimerStart()
 	 *
 	 */
 	TIM_HandleDef_LCDFadeOut.Init.Prescaler = (uint32_t)(SystemCoreClock / TIM7_countClock) - 1;
-	TIM_HandleDef_LCDFadeOut.Init.Period = 300;//(uint32_t)(TIM2_countClock * updateRate * 2) - 1;
+	TIM_HandleDef_LCDFadeOut.Init.Period = 250;//(uint32_t)(TIM2_countClock * updateRate * 2) - 1;
 
 	TIM_HandleDef_LCDFadeOut.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	TIM_HandleDef_LCDFadeOut.Init.RepetitionCounter = 0;
 
 	/* Setting IRQ for timer */
-	HAL_NVIC_SetPriority(TIM7_IRQn, 2, 2);
+	HAL_NVIC_SetPriority(TIM7_IRQn, 8, 5);
 	HAL_NVIC_EnableIRQ(TIM7_IRQn);
 
 	if(HAL_TIM_Base_Init(&TIM_HandleDef_LCDFadeOut) != HAL_OK)

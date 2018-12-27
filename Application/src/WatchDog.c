@@ -12,10 +12,14 @@
 
 void WatchDog_Init()
 {
-	/* APB1(45MHz)/4096/128 = 85,8Hz = 11,65ms */
-	WDG_HandleDef.Init.Prescaler = IWDG_PRESCALER_128;
+	__HAL_RCC_WWDG_CLK_ENABLE();
 
-	/* 0x800 = 2048 => 11,65ms * 2048 = 23 sec
+	/* APB1(42MHz)/4096/256 = 85,8Hz = 23.3ms */
+	WDG_HandleDef.Init.Prescaler = IWDG_PRESCALER_256;
+
+	/* 0x800 = 2048 => 23.3ms * 2048 = 40 sec
+	 *
+	 * 0xFFF = 4095 => 23.3ms * 4095 = 80 sec
 	 *
 	 * ha ennyi idõ után sem hivódik meg a refresh függvény,
 	 * azaz nem töltõdik újra a WWDG számláló,

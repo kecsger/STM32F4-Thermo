@@ -13,9 +13,10 @@
 
 #include "Application.h"
 
-extern void _cbWin0(WM_MESSAGE * pMsg);
-extern void _cbWin1(WM_MESSAGE * pMsg);
-extern void _cbWin2(WM_MESSAGE * pMsg);
+extern void callbackTermosztat(WM_MESSAGE * pMsg);
+extern void callbackGrafikon(WM_MESSAGE * pMsg);
+extern void callbackBeallitasok(WM_MESSAGE * pMsg);
+extern void callbackDiagnosztika(WM_MESSAGE * pMsg);
 
 void 		LCD_DrawScreen(void);
 
@@ -27,6 +28,7 @@ WM_HWIN mainWin;
 WM_HWIN termosztat;
 WM_HWIN grafikon;
 WM_HWIN beallitasok;
+WM_HWIN diagnosztika;
 
 
 

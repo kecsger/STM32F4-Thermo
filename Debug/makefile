@@ -36,10 +36,10 @@ endif
 all: F429.elf
 
 # Tool invocations
-F429.elf: $(OBJS) $(USER_OBJS)
+F429.elf: $(OBJS) $(USER_OBJS) C:\Users\kecsger12\workspace\F429\LinkerScript.ld
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU GCC Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -L"C:/Users/kecsger12/workspace/F429/Middlewares/ST/STemWin/Lib" -T"C:\Users\kecsger12\workspace\F429\LinkerScript.ld" -Wl,-Map=output.map -Wl,--gc-sections -lm -o "F429.elf" @"objects.list" $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -L"C:/Users/kecsger12/workspace/F429/Middlewares/ST/STemWin/Lib" -T"C:\Users\kecsger12\workspace\F429\LinkerScript.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "F429.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build

@@ -34,7 +34,7 @@ void AD7843_Init()
 	//AD7843_SPI_GPIOInit();
 	//AD7843_SPI_ConfigInit();
 	SPI_Init_GPIO(AD7843_SPI_PORT, AD7843_MISO, AD7843_MOSI, AD7843_SCK, AD7843_nSS);
-	SPI_Init_Config(SPI_AD7843, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 1000000);
+	SPI_Init_Config(SPI_AD7843, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, SPI_DATASIZE_8BIT, 1000000);
 
 	AD7843_SPI_nSS(1);
 
@@ -121,9 +121,11 @@ uint16_t AD7843_GetTouch_X()
 	AD7843_SPI_nSS(0);
 
 	AD7843_Write(AD7843_CH_X);
+	// TODO: ITT kellene mérni
 	//while(AD7843_isBusy());
 
 	x_coordinate = AD7843_Read();
+	//és ITT kellene mérni a BUSY lábat
 	//while(AD7843_isBusy());
 
 	AD7843_SPI_nSS(1);
@@ -150,7 +152,7 @@ uint16_t AD7843_GetTouch_Y()
 	if(HAL_SPI_GetState(&SPI_HandleDef_AD7843) != HAL_SPI_STATE_RESET)
 	{
 		AD7843_DeInit();
-		SPI_Init_Config(SPI_ILI9341, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 11000000);
+		SPI_Init_Config(SPI_ILI9341, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, SPI_DATASIZE_8BIT, 11000000);
 		SPI_Init_GPIO(ILI9341_GPIO_PORT, ILI9341_MISO, ILI9341_MOSI, ILI9341_SCK, ILI9341_nSS);
 	}
 
@@ -231,8 +233,9 @@ void AD7843_GPIO_Init()
 	HAL_GPIO_Init(AD7843_GPIO_PORT, &GPIO_InitStruct);
 
 	/* Enable and set EXTI Line9:5 Interrupt to the lowest priority */
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_1);
-	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 0);
+	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 4);
 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 

@@ -22,17 +22,15 @@ extern UART_HandleTypeDef UART_HandleDef_SPWF01SA;
 void 		UART_Init();
 
 void 		UART_GPIO_Init();
-void 		UART_InitConfig();
-
-void 		UART_TransmitData(uint16_t dataBuf);
-void 		UART_TransmitString(const char *str);
-void 		UART_TransmitRecieveString(char *Txstr, char *Rxstr);
-
-void 		UART_RecieveData(char *c);
-void 		UART_RecieveData2(char *c, int numOfChar);
-void 		UART_RecieveString(char *RxBufer);
+void 		UART_InitConfig(uint32_t BaudRateSpeed);
 
 void 		UART_Wait(USART_TypeDef *USARTx);
+
+
+void UART_TransmitString(char *AT_Command);
+void UART_ReceiveString(char *RxBuff, uint16_t expectedNumOfCharsToRecieve);
+
+
 
 /*================================[Prototype function declarations]===================================================*/
 

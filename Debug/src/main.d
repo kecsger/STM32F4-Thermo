@@ -61,6 +61,7 @@ src/main.o: ../src/main.c \
  C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_ll_usb.h \
  C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h \
  C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_hal_hcd.h \
+ C:/Users/kecsger12/workspace/F429/inc/stm32f4xx_it.h \
  C:/Users/kecsger12/workspace/F429/Application/inc/Application.h \
  C:/Users/kecsger12/workspace/F429/Board/inc/uart.h \
  C:/Users/kecsger12/workspace/F429/Board/inc/spi.h \
@@ -256,6 +257,8 @@ C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_ll_usb.h:
 C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h:
 
 C:/Users/kecsger12/workspace/F429/HAL_Driver/Inc/stm32f4xx_hal_hcd.h:
+
+C:/Users/kecsger12/workspace/F429/inc/stm32f4xx_it.h:
 
 C:/Users/kecsger12/workspace/F429/Application/inc/Application.h:
 

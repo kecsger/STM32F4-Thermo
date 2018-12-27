@@ -205,6 +205,7 @@ void 			AD7792_WriteReg(uint8_t reg, uint16_t value, uint8_t size);
 uint16_t 		AD7792_ReadReg(uint8_t reg,  uint8_t size);
 
 double			AD7792_MeasureTemp();
+double 			AD7792_MeasureTemp2();
 
 uint8_t 		AD7792_IDRead_Success();
 

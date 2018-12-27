@@ -51,11 +51,11 @@ void Relay_On()
 {
 	/* Set time is max 10ms */
 	BD6211_StandBy();
-	HAL_Delay(10);
+	HAL_Delay(5);
 
 	/* Min set signal width has to be 20ms */
 	BD6211_Forward();
-	HAL_Delay(50);
+	HAL_Delay(5);
 
 	BD6211_StandBy();
 }
@@ -65,11 +65,11 @@ void Relay_Off()
 {
 	/* Reset time is max 10ms */
 	BD6211_StandBy();
-	HAL_Delay(10);
+	HAL_Delay(5);
 
 	/* Min reset signal width has to be 20ms */
 	BD6211_Reverse();
-	HAL_Delay(50);
+	HAL_Delay(5);
 
 	BD6211_StandBy();
 }

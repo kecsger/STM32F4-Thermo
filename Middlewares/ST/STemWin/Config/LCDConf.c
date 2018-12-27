@@ -154,14 +154,10 @@ static void LcdWriteData(U16 Data) {
 
 	ILI9341_SendData(Data);
 
+	//ILI9341_SendMultipleData((U8*)&Data, 2);
 
-/*
-	ILI9341_SendData(data_H);
-	ILI9341_SendData(data_L);
-*/
-
-
-
+	//ILI9341_SendData(data_H);
+	//ILI9341_SendData(data_L);
 
 }
 
@@ -190,6 +186,8 @@ static void LcdWriteDataMultiple(U16 * pData, int NumItems) {
 
 
   }
+
+	//ILI9341_SendMultipleData((U8*)pData, 2);
 }
 
 /********************************************************************

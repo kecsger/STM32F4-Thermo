@@ -162,7 +162,7 @@ static void _SetPixelIndex(GUI_DEVICE * pDevice, int x, int y, int PixelIndex) {
       //
       // TBD by customer...
       //
-
+    	// TODO : biztosan jó az x,y,x,y ??
     	ILI9341_SetCursorPosition(x,y,x,y);
 
 
@@ -204,7 +204,7 @@ static unsigned int _GetPixelIndex(GUI_DEVICE * pDevice, int x, int y) {
       // Write into hardware ... Adapt to your system
       //
       // TBD by customer...
-      //
+      // TODO: Csekkolni ezt! LEhet le kell kérni szebben a pixel koordinátát
       PixelIndex = 0;
     }
     #if (LCD_MIRROR_X == 0) && (LCD_MIRROR_Y == 0) && (LCD_SWAP_XY == 0)
