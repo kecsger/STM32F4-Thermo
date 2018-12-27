@@ -92,6 +92,8 @@ int main(void)
 			LCD_ScreenTouched();
 		}
 		*/
+
+
 		TaskManager();
 
 	}
