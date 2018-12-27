@@ -14,11 +14,13 @@
 
 /*================================[Macros]==============================================================*/
 
+#define			STILLSTATE_IN		0.3
+#define			STILLSTATE_OUT		0.2
 
 /*================================[Internal functions]==============================================================*/
 
 int count = 0;
-uint8_t internetStatus = 0;
+InternetState_t internetStatus = NoConnection;
 uint8_t buttonPressedCnt = 0;
 
 uint8_t tempDes_changed = 0;
@@ -26,19 +28,23 @@ uint8_t tempDes_changed = 0;
 uint8_t POST_success = 0;
 uint8_t POSTcnt = 0;
 
+/* DIAGNOSTIC variables */
+uint16_t task_idle_runtime_ms;
+uint16_t task_1sec_runtime_ms;
+uint16_t task_10sec_runtime_ms;
+uint16_t task_1min_runtime_ms;
+uint16_t tmpRuntime_var;
+int32_t upTimeCounter_1sec;
+
 /*================================[Function definitions]==============================================================*/
 
 void Application_RUN()
 {
-	WatchDog_Refresh();
 
-	WiFi_GET_TempDesired(mode, 10000);
+	tempAct_mainModule = AD7792_MeasureTemp2();
+	tempAct_smallModule = RFM_GetTemperature();
 
-	RFM_Receive(Rx_buf);
-
-	tempAct1 = AD7792_MeasureTemp();
-
-	if(tempAct1 < tempDesired)
+	if( (tempDesired - tempAct_mainModule) > STILLSTATE_OUT)
 	{
 		if(isHeating == 0)
 		{
@@ -46,13 +52,12 @@ void Application_RUN()
 			isReady = 0;
 
 			Relay_On();
-
-			WiFi_POST_ThermoStatus(isOn, isHeating, isReady, tempAct1, tempAct2, mode);
+			//WiFi_POST_ThermoStatus(isOn, isHeating, isReady, tempAct_mainModule, tempAct_smallModule, mode);
 		}
 		else
 		{
-			WiFi_GET_TempDesired(mode, 10000);
-			LCD_UpdateStatus();
+			/* Handled in Task_1minute */
+			// WiFi_GET_TempDesired(mode, 10000);
 		}
 	}
 
@@ -62,36 +67,33 @@ void Application_RUN()
 		isHeating = 0;
 
 		Relay_Off();
-
-		WiFi_POST_ThermoStatus(isOn, isHeating, isReady, tempAct1, tempAct2, mode);
+		//WiFi_POST_ThermoStatus(isOn, isHeating, isReady, tempAct_mainModule, tempAct_smallModule, mode);
 	}
 
-	LCD_UpdateStatus();
 
 	if(tempDes_changed == 1)
 	{
 		tempDes_changed = 0;
-		HAL_Delay(100);
 
 		if(tempDes_changed == 1)
 		{tempDes_changed = 0; return;}
 
-		WiFi_POST_TempDesired(tempDesired, mode);
-		HAL_Delay(10);
+		//WiFi_POST_TempDesired(tempDesired, mode);
 	}
+
 }
 
 void LCD_ScreenTouched()
 {
 	uint16_t x_coord, y_coord;
 
-	x_coord = AD7843_GetTouch_X();
-	y_coord = AD7843_GetTouch_Y();
-
 	/* Turn on backlight again, and start BacklightTimer */
 	LCD_BacklightWithPWM(100);
 	LCD_BacklightTimerStart(30);
 
+	/* Get the coordinates */
+	x_coord = AD7843_GetTouch_X();
+	y_coord = AD7843_GetTouch_Y();
 
 
 	/* Termosztat MultiPage */
@@ -158,7 +160,7 @@ void LCD_ScreenTouched()
 	}
 
 	/* Button '+' */
-	if(x_coord > 270 && x_coord < 310 && \
+	if(x_coord > 260 && x_coord < 310 && \
 			y_coord > 198 && y_coord < 238)
 	{
 		if(WM_GetActiveWindow() == termosztat)
@@ -188,29 +190,64 @@ void LCD_UpdateStatus()
 	GUI_Exec();
 }
 
+void LCD_ChangeWindow()
+{
+	if(WM_GetActiveWindow() == termosztat)
+	{
+		WM_HideWindow(WM_GetActiveWindow());
+		MULTIPAGE_SelectPage(hMultiPage, 1);
+		WM_SelectWindow(grafikon);
+		WM_ShowWindow(grafikon);
+		mainWin = grafikon;
+		WM_InvalidateWindow(mainWin);
+	}
 
+	else if(WM_GetActiveWindow() == grafikon)
+	{
+		WM_HideWindow(WM_GetActiveWindow());
+		MULTIPAGE_SelectPage(hMultiPage, 2);
+		WM_SelectWindow(beallitasok);
+		WM_ShowWindow(beallitasok);
+		mainWin = beallitasok;
+		WM_InvalidateWindow(mainWin);
+	}
+
+	else if(WM_GetActiveWindow() == beallitasok)
+	{
+		WM_HideWindow(WM_GetActiveWindow());
+		MULTIPAGE_SelectPage(hMultiPage, 3);
+		WM_SelectWindow(diagnosztika);
+		WM_ShowWindow(diagnosztika);
+		mainWin = diagnosztika;
+		WM_InvalidateWindow(mainWin);
+	}
+
+	else if(WM_GetActiveWindow() == diagnosztika)
+	{
+		WM_HideWindow(WM_GetActiveWindow());
+		MULTIPAGE_SelectPage(hMultiPage, 0);
+		WM_SelectWindow(termosztat);
+		WM_ShowWindow(termosztat);
+		mainWin = termosztat;
+		WM_InvalidateWindow(mainWin);
+	}
+}
 
 
 void InitBoard()
 {
-
 
 /*--------------------[ GPIO Init ]----------------------------*/
 
 	LED_Init();
 	Button_init();
 
-
 /*--------------------[ ILI9342 Init ]----------------------------*/
-
-
 
 	LCD_BacklightPWMInit();
 	//LCD_BacklightTimerStart(5);
 
 	ILI9341_Init();
-
-
 
 /*  LCD is beeing initialized in LCDConf.c
 
@@ -228,13 +265,11 @@ void InitBoard()
 
 /*--------------------[ RTC Config ]----------------------------*/
 
-	if(internetStatus == Success)
+	if(internetStatus == Online)
 		WiFi_GET_TimeAndDate();
 
 	else
-		RTC_CalendarConfig(0x01, RTC_MONTH_JANUARY, 0x01, 0x01, 0x01, 0x01);
-
-
+		RTC_CalendarConfig(0x18, RTC_MONTH_JANUARY, 0x01, 0x19, 0x21, 0x00);
 
 
 /*--------------------[ RFM73 Init ]----------------------------*/
@@ -264,7 +299,7 @@ void InitVariables()
 	isReady = 1;
 	tempDesired = 21.0;
 	tempDesired_Current = tempDesired;
-	mode = "manual";
+	mode = Manual;
 }
 
 
@@ -284,22 +319,21 @@ void Button_init()
 
 	HAL_GPIO_Init(GPIOC, &Gpio_Init);
 
-	//HAL_NVIC_SetPriority(EXTI0_IRQn, 4, 0);
-	//HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 40, 5);
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 void ButtonWasPressed()
 {
-	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0))
-	{
-		HAL_Delay(80);
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0))
-		{
-				LCD_BacklightWithPWM(1);
+	GreenLED_On();
+	LCD_BacklightWithPWM(100);
 
-		}
+	LCD_BacklightTimerStart(12);
 
-	}
+
+	LCD_ChangeWindow();
+
+	GreenLED_Off();
 }
 
 

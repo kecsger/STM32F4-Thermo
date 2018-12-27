@@ -39,7 +39,7 @@ extern SPI_HandleTypeDef SPI_HandleDef_AD7843;		// SPI4
 /*================================[Function prototypes]============================================================================*/
 
 void 		SPI_Init_GPIO(GPIO_TypeDef  *GPIOx, uint32_t GPIO_PinMISO, uint32_t GPIO_PinMOSI, uint32_t GPIO_PinSCK, uint32_t GPIO_PinnSS);
-void 		SPI_Init_Config(SPI_Periph_t SPIx_type, uint32_t CLKPolarity, uint32_t CLKPhase, uint32_t BaudRatePrescaler);
+void 		SPI_Init_Config(SPI_Periph_t SPIx_type, uint32_t CLKPolarity, uint32_t CLKPhase, uint32_t DataSize, uint32_t BaudRatePrescaler);
 
 
 uint32_t 	SPIx_Read(SPI_Periph_t SPIx_type, uint8_t size);

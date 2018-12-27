@@ -66,7 +66,7 @@ void SPI_Init_GPIO(GPIO_TypeDef  *GPIOx, uint32_t GPIO_PinMISO, uint32_t GPIO_Pi
  * 				MAX Frequency in which the given device is operates *
  */
 
-void SPI_Init_Config(SPI_Periph_t SPIx_type, uint32_t CLKPolarity, uint32_t CLKPhase, uint32_t MAX_SPI_Frequency)
+void SPI_Init_Config(SPI_Periph_t SPIx_type, uint32_t CLKPolarity, uint32_t CLKPhase, uint32_t DataSize, uint32_t MAX_SPI_Frequency)
 {
 	HAL_StatusTypeDef SPI_Status;
 	SPI_HandleTypeDef *SPI_HandleDef;
@@ -101,7 +101,7 @@ void SPI_Init_Config(SPI_Periph_t SPIx_type, uint32_t CLKPolarity, uint32_t CLKP
 
 		SPI_HandleDef->Init.Direction = SPI_DIRECTION_2LINES;
 		SPI_HandleDef->Init.Mode = SPI_MODE_MASTER;
-		SPI_HandleDef->Init.DataSize = SPI_DATASIZE_8BIT;
+		SPI_HandleDef->Init.DataSize = DataSize;
 		SPI_HandleDef->Init.CLKPolarity = CLKPolarity;
 		SPI_HandleDef->Init.CLKPhase = CLKPhase;
 		SPI_HandleDef->Init.NSS = SPI_NSS_SOFT;
@@ -186,7 +186,7 @@ void SPIx_Write(SPI_Periph_t SPIx_type, uint8_t Value)
 {
   HAL_StatusTypeDef status = HAL_ERROR;
   uint8_t size = 1;
-  uint32_t timeout = 1000;
+  uint32_t timeout = 10;
   SPI_HandleTypeDef *SPI_HandleDef;
 
   uint8_t option;
@@ -316,6 +316,8 @@ uint8_t SPI_Write(SPI_HandleTypeDef SPI_HandleDef, uint8_t data)
 
 	 // Return data from buffer
 	//return SPIx->DR;
+
+	return 0;
 }
 
 void SPI_Wait_TX(SPI_TypeDef *SPIx)

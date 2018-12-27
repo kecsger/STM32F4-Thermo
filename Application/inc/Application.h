@@ -48,31 +48,41 @@
 /*================================[Type definitions]==================================================================*/
 
 typedef enum{
-
-	OK = 1,
-	Success,
-	Online,
+	Online = 1,
 	TimeOut,
 	NoConnection,
 	Error
 }InternetState_t;
 
+typedef enum {
+	Manual = 0,
+	Auto
+}ThermostatMode_t;
+
 /*================================[Internal constants]================================================================*/
 
 /* Thermo status variables */
-uint8_t isOn;				/* Thermostat ON/Off */
-uint8_t isHeating;			/* Thermostat is HEATING */
-uint8_t isReady;			/* Previous heating is done */
-double tempAct1;			/* Temperature where the main module is */
-double tempAct2;			/* Temperature where the small module is */
-double tempDesired;			/* Desired temperature */
-double tempDesired_Current;	/* Desired temperature */
-char *mode;					/* Manual or Automatic mode */
+uint8_t 			isOn;				/* Thermostat ON/Off */
+uint8_t 			isHeating;			/* Thermostat is HEATING */
+uint8_t 			isReady;			/* Previous heating is done */
+float 				tempAct_mainModule;	/* Temperature where the main module is */
+float 				tempAct_smallModule;/* Temperature where the small module is */
+float 				tempDesired;		/* Desired temperature */
+float 				tempDesired_Current;/* Desired temperature */
+uint8_t			 	mode;				/* Manual or Automatic mode */
+
+/* DIAGNOSTIC variables */
+extern uint16_t task_idle_runtime_ms;
+extern uint16_t task_1sec_runtime_ms;
+extern uint16_t task_10sec_runtime_ms;
+extern uint16_t task_1min_runtime_ms;
+extern uint16_t tmpRuntime_var;
+extern int32_t upTimeCounter_1sec;
 
 extern uint8_t internetStatus;
 
-extern double oneDayTemp1[288];
-extern double oneDayTemp2[288];
+extern float oneDayTemp1[288];
+extern float oneDayTemp2[288];
 
 extern uint8_t Rx_buf[MAX_PACKET_LEN];
 

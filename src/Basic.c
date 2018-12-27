@@ -35,6 +35,9 @@ Requirements: WindowManager - (x)
 #include "ad7792_temp.h"
 #include "rtc.h"
 
+#include "Application.h"
+
+
 
 /*********************************************************************
 *
@@ -59,7 +62,7 @@ BUTTON_Handle buttonLCD, buttonWiFi, buttonTimeDate, buttonModeMan, buttonModeAu
 
 
 
-double oneDayTemp1[288] =
+float oneDayTemp1[288] =
 {
 		22.2,22.3,22.2,22.1,22.1,22.0,22.0,22.1,22.1,22.0,22.5,22.5,22.4,22.3,22.2,
 		22.1,22.1,22.0,22.0,22.1,22.1,22.0,21.8,21.8,21.7,21.6,21.5,21.4,21.3,21.3,
@@ -84,7 +87,7 @@ double oneDayTemp1[288] =
 };
 
 
-double oneDayTemp2[288] =
+float oneDayTemp2[288] =
 {
 		21.3,21.3,21.3,21.2,21.2,21.1,21.1,21.1,21.1,21.0,21.0,21.0,21.0,21.0,20.9,
 		20.9,20.9,20.9,20.8,20.8,20.8,20.8,20.8,20.7,20.7,20.8,20.7,20.6,20.6,20.6,
@@ -151,7 +154,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate3[] =
 */
 
 
-void _cbWin0(WM_MESSAGE * pMsg)
+void callbackTermosztat(WM_MESSAGE * pMsg)
 {
 	BUTTON_Handle buttonPlus, buttonNeg;
 
@@ -159,8 +162,6 @@ void _cbWin0(WM_MESSAGE * pMsg)
 	{
 
 		case WM_CREATE:
-
-
 
 			BUTTON_SetDefaultFont(&GUI_Font24B_1);
 			buttonNeg = BUTTON_CreateEx(160, 198, 35, 35, termosztat,  WM_CF_SHOW, 0, 0);
@@ -172,6 +173,7 @@ void _cbWin0(WM_MESSAGE * pMsg)
 
 		case WM_PAINT:
 
+			/* Alap festés */
 			GUI_DrawGradientV(0, 0, 320, 220, GUI_DARKGRAY, GUI_LIGHTBLUE);
 
 			GUI_SetColor(GUI_WHITE);
@@ -195,14 +197,13 @@ void _cbWin0(WM_MESSAGE * pMsg)
 			GUI_SetFont(&GUI_Font8x16_1);
 			GUI_DispStringAt("°", 93, 172);
 
-
+			/* Adatok feltöltése */
 			GUI_DispStringAt(isHeating==1?("Fûtés"):(isReady==1?("Készen"):(" - ")), 40, 110);   	//x
 
-			/* tempAct */
 			GUI_GotoX(160);
 			GUI_GotoY(57);
 			GUI_SetFont(&GUI_FontD36x48);
-			GUI_DispFloat(tempAct1, 4);
+			GUI_DispFloat(tempAct_mainModule, 4);
 
 			RTC_CalendarShow(aShowTime, aShowDate);
 
@@ -210,9 +211,6 @@ void _cbWin0(WM_MESSAGE * pMsg)
 			GUI_DispStringAt((char*)&aShowDate, 2, 8);
 			GUI_SetFont(&GUI_FontD24x32);
 			GUI_DispStringAt((char*)&aShowTime, 15, 35);
-
-			if(Rx_buf[0] != '\0')
-				tempAct2 = 10 * (Rx_buf[0]-48) + (Rx_buf[1]-48) + ((Rx_buf[3]-48.0)/10.0);
 
 			GUI_SetFont(&GUI_Font32B_1);
 			GUI_DispStringAt((char*)&Rx_buf, 40, 170);
@@ -223,30 +221,40 @@ void _cbWin0(WM_MESSAGE * pMsg)
 			GUI_DispFloat(tempDesired, 4);
 
 			GUI_SetFont(&GUI_Font13_ASCII);
-			internetStatus==Success?GUI_DispStringAt("ONLINE", 160, 5):GUI_DispStringAt("OFFLINE", 160, 5);
+			internetStatus==Online?GUI_DispStringAt("ONLINE", 160, 5):GUI_DispStringAt("OFFLINE", 160, 5);
 
 		break;
   }
 }
 
-void _cbWin1(WM_MESSAGE * pMsg)
+void callbackGrafikon(WM_MESSAGE * pMsg)
 {
 	I16 y_tempDataToCoord[288];
 	int i;
 
+	float maxVal = 0.0;
+	float minVal = 100.0;
+
 	switch (pMsg->MsgId)
 	{
-
 		case WM_PAINT:
+
+			GUI_Clear();
 
 			GUI_SetColor(GUI_BLACK);
 			GUI_FillRect(0,0,320,210);
 
+			/* Setting grid */
 
 			GUI_SetColor(GUI_GRAY);
 			for(i=0; i<7; i++)
 			{
 				GUI_DrawVLine(i*51+12, 0, 200);
+			}
+
+			for(i=0; i<5; i++)
+			{
+				GUI_DrawHLine(i*48, 0, 320);
 			}
 
 			GUI_SetColor(GUI_YELLOW);
@@ -258,45 +266,78 @@ void _cbWin1(WM_MESSAGE * pMsg)
 			GUI_DispStringAt("20", 262, 200);
 			GUI_DispStringAt("24", 308, 200);
 
-			GUI_SetColor(GUI_GRAY);
-			for(i=0; i<5; i++)
-			{
-				GUI_DrawHLine(i*48, 0, 320);
-			}
-
-			GUI_SetColor(GUI_YELLOW);
-			GUI_DispStringAt("23", 0, 1);
-			GUI_DispStringAt("22", 0, 45);
-			GUI_DispStringAt("21", 0, 92);
-			GUI_DispStringAt("20", 0, 141);
-			GUI_DispStringAt("19", 0, 189);
-
 
 			/* Grafikon #1 */
+
 			for(i=0; i< GUI_COUNTOF(oneDayTemp1); i++)
 			{
-				y_tempDataToCoord[i] = (((23.0-oneDayTemp1[i])/(23.0-19.0)) * 189);
+				maxVal = GUI_MAX(maxVal, oneDayTemp1[i]);
+				minVal = GUI_MIN(minVal, oneDayTemp1[i]);
 			}
+
+			/* Setting diplay values */
+			maxVal = maxVal + 0.5;
+			minVal = minVal - 0.5;
+
+			/* Saturation */
+			if(maxVal > 50.0)
+				maxVal = 50.0;
+			if(minVal < -50.0)
+				minVal = -50.0;
+
+			if(maxVal < tempAct_mainModule)
+				maxVal = tempAct_mainModule + 0.5;
+
+			 for(i=0; i< GUI_COUNTOF(oneDayTemp1); i++)
+			 {
+				 y_tempDataToCoord[i] = (((maxVal-oneDayTemp1[i])/(maxVal - minVal)) * 192);
+			 }
 			GUI_SetColor(GUI_GREEN);
 			GUI_DrawGraph(y_tempDataToCoord, GUI_COUNTOF(y_tempDataToCoord), 12, 0);
 
 
+			/* Display current temp on the scale with a red dot
+			 *
+			 * 09:48 --> aShowTime[0:4]
+			 *
+			 */
+
+			RTC_CalendarShow(aShowTime, aShowDate);
+
+			float actTime = (aShowTime[0]-48)*10 + (aShowTime[1]-48) + (float)((aShowTime[3]-48)*10+(aShowTime[4]-48))/60.0;
+			int x = (int) (actTime/(24.0-0.0) * (318-12.0) + 12.0);
+			int y = (int)((maxVal-tempAct_mainModule)/(maxVal-minVal) * 192);
+			GUI_SetColor(GUI_RED);
+			GUI_FillCircle(x, y, 2);
 
 			/* Grafikon #2 */
-			for(i=0; i< GUI_COUNTOF(oneDayTemp2); i++)
-			{
-				y_tempDataToCoord[i] = (((23.0-oneDayTemp2[i])/(23.0-19.0)) * 189);
-			}
-			GUI_SetColor(GUI_RED);
-			GUI_DrawGraph(y_tempDataToCoord, GUI_COUNTOF(y_tempDataToCoord), 12, 0);
+			//for(i=0; i< GUI_COUNTOF(oneDayTemp2); i++)
+			//{
+			//	y_tempDataToCoord[i] = (((23.0-oneDayTemp2[i])/(23.0-19.0)) * 189);
+			//}
+			//GUI_SetColor(GUI_RED);
+			//GUI_DrawGraph(y_tempDataToCoord, GUI_COUNTOF(y_tempDataToCoord), 12, 0);
 
-			break;
+
+			GUI_SetColor(GUI_YELLOW);
+			GUI_GotoXY(0, 1);
+			GUI_DispSFloatMin(maxVal, 1);
+			GUI_GotoXY(0, 45);
+			GUI_DispSFloatMin(minVal+(maxVal-minVal)*0.75, 1);
+			GUI_GotoXY(0, 92);
+			GUI_DispSFloatMin(minVal+(maxVal-minVal)*0.5, 1);
+			GUI_GotoXY(0, 141);
+			GUI_DispSFloatMin(minVal+(maxVal-minVal)*0.25, 1);
+			GUI_GotoXY(0, 189);
+			GUI_DispSFloatMin(minVal, 1);
+
+		break;
   }
 }
 
 
 
-void _cbWin2(WM_MESSAGE * pMsg)
+void callbackBeallitasok(WM_MESSAGE * pMsg)
 {
 
 	switch (pMsg->MsgId)
@@ -320,18 +361,64 @@ void _cbWin2(WM_MESSAGE * pMsg)
 			BUTTON_SetText(buttonWiFi, "WiFi beálltások");
 
 			buttonModeMan = BUTTON_CreateEx(40, 160, 100, 40, beallitasok,  WM_CF_SHOW, 0, 0);
-			if(strcmp(mode, "manual") == 0)
+			if(mode == Manual)
 				BUTTON_SetTextColor(buttonModeMan, BUTTON_CI_UNPRESSED, GUI_DARKGREEN);
 			BUTTON_SetText(buttonModeMan, "Manuális");
 
 
 			buttonModeAuto = BUTTON_CreateEx(180, 160, 100, 40, beallitasok,  WM_CF_SHOW, 0, 0);
-			if(strcmp(mode, "auto") == 0)
+			if(mode == Auto)
 				BUTTON_SetTextColor(buttonModeAuto, BUTTON_CI_UNPRESSED, GUI_DARKGREEN);
 			BUTTON_SetText(buttonModeAuto, "Automatikus");
 
-			break;
+		break;
 
+  }
+}
+
+void callbackDiagnosztika(WM_MESSAGE * pMsg)
+{
+	uint8_t day = (uint8_t)(upTimeCounter_1sec/(60*60*24));
+	uint8_t hour = (uint8_t)((upTimeCounter_1sec - day*60*60*24)/3600);
+	uint8_t min = (uint8_t)((upTimeCounter_1sec - hour*3600 - day*60*60*24)/60);
+	uint8_t sec = (uint8_t)(upTimeCounter_1sec % 60);
+
+	switch (pMsg->MsgId)
+	{
+		case WM_PAINT:
+
+			GUI_DrawGradientV(0, 0, 320, 220, GUI_DARKGRAY, GUI_LIGHTBLUE);
+
+			GUI_SetColor(GUI_WHITE);
+			GUI_SetTextMode(GUI_TM_TRANS);
+
+			GUI_SetFont(&GUI_Font16_1);
+			GUI_DispStringAt("Idle task futási ideje [ms]:", 5, 8);
+			GUI_DispStringAt("1  sec task futási ideje [ms]:", 5, 30);
+			GUI_DispStringAt("10 sec task futási ideje [ms]:", 5, 50);
+			GUI_DispStringAt("1 min task futási ideje [ms]:", 5, 70);
+			GUI_DispStringAt("Készenléti idõ:", 5, 90);
+			GUI_DrawHLine(90, 5, 300);
+
+			/* Adatfeltöltés */
+			GUI_SetFont(&GUI_Font20B_ASCII);
+			GUI_DispDecAt(task_idle_runtime_ms,	245, 7, 3);
+			GUI_DispDecAt(task_1sec_runtime_ms,	245, 28, 3);
+			GUI_DispDecAt(task_10sec_runtime_ms,245, 50, 3);
+			GUI_DispDecAt(task_1min_runtime_ms,245, 70, 3);
+
+
+
+			if (day > 0)
+				{GUI_DispDecAt(day, 180, 90, 2);GUI_DispStringAt(":", 199, 90);}
+			if (hour > 0 || day > 0)
+				{GUI_DispDecAt(hour, 205, 90, 2);GUI_DispStringAt(":", 224, 90);}
+			if (min > 0 || hour > 0)
+				{GUI_DispDecAt(min,	230, 90, 2);GUI_DispStringAt(":", 249, 90);}
+
+			GUI_DispDecAt(sec, 255, 90, 2);
+
+			break;
   }
 }
 
@@ -363,35 +450,42 @@ void LCD_DrawScreen(void)
 	hDialog = GUI_CreateDialogBox(_aDialogCreate3, GUI_COUNTOF(_aDialogCreate3), NULL,       WM_UNATTACHED, 0, 0);
 	MULTIPAGE_AddPage(hMultiPage, hDialog, "Beállítások");
 
-	MULTIPAGE_SetTabWidth(hMultiPage, 105, 0);
-	MULTIPAGE_SetTabWidth(hMultiPage, 105, 1);
-	MULTIPAGE_SetTabWidth(hMultiPage, 106, 2);
+	hDialog = GUI_CreateDialogBox(_aDialogCreate3, GUI_COUNTOF(_aDialogCreate3), NULL,       WM_UNATTACHED, 0, 0);
+	MULTIPAGE_AddPage(hMultiPage, hDialog, "Diagnosztika");
+
+	MULTIPAGE_SetTabWidth(hMultiPage, 80, 0);
+	MULTIPAGE_SetTabWidth(hMultiPage, 66, 1);
+	MULTIPAGE_SetTabWidth(hMultiPage, 80, 2);
+	MULTIPAGE_SetTabWidth(hMultiPage, 90, 3);
 	MULTIPAGE_SetTabHeight(hMultiPage, 30);
 	MULTIPAGE_SetFont(hMultiPage, &GUI_Font16B_1);
 
 
 	MULTIPAGE_SKINFLEX_PROPS multipageSkinEnabled =
 	{
-				GUI_DARKGRAY,// backcolor for selected items
-				GUI_BLACK,// top color of top gradient
-				GUI_GRAY,// buttom color of buttom gradient
-				GUI_GRAY, // top color of buttom gradient
-				GUI_LIGHTBLUE,// buttom color of buttom gradient
-				GUI_GRAY,// frame color
-				GUI_WHITE // text color
+				GUI_DARKGRAY,			// backcolor for selected items
+				{		GUI_BLACK,		// top color of top gradient
+						GUI_GRAY		// buttom color of buttom gradient
+				},
+				{		GUI_GRAY, 		// top color of buttom gradient
+						GUI_LIGHTBLUE	// buttom color of buttom gradient
+				},
+				GUI_GRAY,				// frame color
+				GUI_WHITE 				// text color
 	};
 
 	MULTIPAGE_SKINFLEX_PROPS multipageSkinSelected =
 	{
-				GUI_DARKGRAY,// backcolor for selected items
-				GUI_BLACK,// top color of top gradient
-				GUI_GRAY,// buttom color of buttom gradient
-				GUI_BLUE, // top color of buttom gradient
-				GUI_LIGHTBLUE,// buttom color of buttom gradient
-				GUI_WHITE,// frame color
-				GUI_WHITE // text color
+				GUI_DARKGRAY,			// backcolor for selected items
+				{		GUI_BLACK,		// top color of top gradient
+						GUI_GRAY		// buttom color of buttom gradient
+				},
+				{		GUI_GRAY, 		// top color of buttom gradient
+						GUI_LIGHTBLUE	// buttom color of buttom gradient
+				},
+				GUI_GRAY,				// frame color
+				GUI_WHITE 				// text color
 	};
-
 
 	MULTIPAGE_SetSkinFlexProps( &multipageSkinEnabled, MULTIPAGE_SKINFLEX_PI_ENABLED);
 	MULTIPAGE_SetSkinFlexProps( &multipageSkinSelected, MULTIPAGE_SKINFLEX_PI_SELECTED);
@@ -399,25 +493,8 @@ void LCD_DrawScreen(void)
 
 }
 
-/*
 
-static void _WriteByte2File(U8 Data, void * p)
-{
-	U32 nWritten;
-	WriteFile(*((HANDLE *)p), &Data, 1, &nWritten, NULL);
-}
-static void _ExportToFile(void)
-{
-	HANDLE hFile = CreateFile("C:\\GUI_BMP_Serialize.bmp", GENERIC_WRITE, 0, 0,	CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-	GUI_BMP_Serialize(_WriteByte2File, &hFile);
-	CloseHandle(hFile);
-}
-*/
-
-
-
-
-void MainTask(void)
+void EmWin_InitGUI(void)
 {
 	/* Enable use of memory devices */
 	WM_SetCreateFlags(WM_CF_MEMDEV);
@@ -425,21 +502,26 @@ void MainTask(void)
 	/*Initialize STemWin GUI */
 	GUI_Init();
 
+	WM_MULTIBUF_Enable(1);
+	/* Activate the use of memory device feature */
+	WM_SetCreateFlags(WM_CF_MEMDEV);
+
 	LCD_DrawScreen();
 
 	/* Megrajzolja a megadott ablak tartalmat */
-	termosztat = WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, _cbWin0, 0);
-	grafikon = WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, _cbWin1, 0);
-	beallitasok = WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, _cbWin2, 0);
+	termosztat = 	WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, callbackTermosztat, 0);
+	grafikon = 		WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, callbackGrafikon, 0);
+	beallitasok = 	WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, callbackGrafikon, 0);
+	diagnosztika = 	WM_CreateWindow(0, 30, 320, 220, WM_CF_HIDE, callbackDiagnosztika, 0);
 
-	//_ExportToFile();
+	/* Kezdo MULTIPAGE - termosztat beallitasa */
+	MULTIPAGE_SelectPage(hMultiPage, 0);
+	WM_SelectWindow(termosztat);
+	WM_ShowWindow(termosztat);
+	mainWin = termosztat;
+	GUI_Exec();
 
-/*
-	while(1)
-	{}
-*/
-
-
+	RedLED_Toggle();
 
 }
 

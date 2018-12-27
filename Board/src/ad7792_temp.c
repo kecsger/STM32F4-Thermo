@@ -42,16 +42,16 @@
 static const RTD_t RTD_LookUp[11] =
 {
 	{0,  100.000},
-	{5,  101.953},
-	{10, 103.903},
-	{15, 105.849},
-	{20, 107.794},
-	{25, 109.735},
-	{30, 111.673},
-	{35, 113.608},
-	{40, 115.541},
-	{45, 117.470},
-	{50, 119.397},
+	{5,  101.925},
+	{10, 103.850},
+	{15, 105.775},
+	{20, 107.700},
+	{25, 109.625},
+	{30, 111.550},
+	{35, 113.475},
+	{40, 115.400},
+	{45, 117.325},
+	{50, 119.250},
 };
 
 /*================================[Macros]==============================================================*/
@@ -67,6 +67,13 @@ static const RTD_t RTD_LookUp[11] =
 #define		AD7792_OFFSET		0x8000						// Default Offset which is in the output code
 #define 	AD7792_ID			0x0A
 
+#define		ADC_SCALE			0.0153						// ADC code to temperature conversion (precalced in excel)
+#define		ADC_OFFSET			-760.08
+
+/*================================[Globar variables]==============================================================*/
+
+
+
 /*================================[Internal functions]==============================================================*/
 
 
@@ -77,7 +84,7 @@ HAL_StatusTypeDef AD7792_Init()
 {
 	/* Init the communication interface for AD7792 */
 	SPI_Init_GPIO(AD7792_PORT, AD7792_MISO, AD7792_MOSI, AD7792_SCK, AD7792_nSS);
-	SPI_Init_Config(SPI_AD7792, SPI_POLARITY_HIGH, SPI_PHASE_2EDGE, 5000000);
+	SPI_Init_Config(SPI_AD7792, SPI_POLARITY_HIGH, SPI_PHASE_2EDGE, SPI_DATASIZE_8BIT, 5000000);
 
 	AD7792_Reset();
 
@@ -146,6 +153,18 @@ double AD7792_MeasureTemp()
 	 * Homerseklek kiszamolasa interpollacio segitsegevel RTD_t strukturabol */
 	Temperature = AD7792_Interpollate(R_RTD);
 
+	return Temperature;
+}
+
+double AD7792_MeasureTemp2()
+{
+	uint16_t ADC_code = 0;
+	double R_RTD, Temperature;
+
+
+	ADC_code = AD7792_ReadReg(AD7792_DATA_REG, 2);
+
+	Temperature = ADC_code*ADC_SCALE + ADC_OFFSET;
 	return Temperature;
 }
 
@@ -285,7 +304,6 @@ void AD7792_WriteReg(uint8_t reg, uint16_t value, uint8_t size)
 	if(size > 1)
 	{
 		SPIx_Write(SPI_AD7792, value_upper);
-		HAL_Delay(1);
 		SPIx_Write(SPI_AD7792, value_lower);
 	}
 	else

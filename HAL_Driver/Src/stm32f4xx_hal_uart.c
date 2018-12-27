@@ -632,7 +632,7 @@ HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, uint8_t *pData, u
     while(huart->TxXferCount > 0)
     {
       huart->TxXferCount--;
-      if(huart->Init.WordLength == UART_WORDLENGTH_9B)
+      if(huart->Init.WordLength == USART_WORDLENGTH_9B)
       {
         if(UART_WaitOnFlagUntilTimeout(huart, UART_FLAG_TXE, RESET, Timeout) != HAL_OK)
         { 

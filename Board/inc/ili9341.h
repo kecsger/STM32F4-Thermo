@@ -156,6 +156,7 @@ void		ILI9341_SPI_nSS(uint8_t BitVal);
 uint16_t 	ILI9341_ReadID();
 
 void 		ILI9341_SendData(uint8_t data);
+void 		ILI9341_SendMultipleData(uint16_t pData);
 void 		ILI9341_SendCommand(uint8_t data);
 uint32_t	ILI9341_ReadReg(uint8_t reg, uint8_t size);
 

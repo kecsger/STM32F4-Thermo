@@ -37,8 +37,10 @@
 
 /*================================[External constants]================================================================*/
 
-extern uint8_t TIM_TaskElapsedCnt;
+extern uint16_t TIM_TaskElapsedCnt;
 
+extern uint8_t is1Second;
+extern uint8_t is10Second;
 extern uint8_t is1Minute;
 extern uint8_t is5Minute;
 extern uint8_t is10Minute;
@@ -47,12 +49,12 @@ extern uint8_t is10Minute;
 
 /*================================[Internal constants]================================================================*/
 
-TIM_HandleTypeDef TIM_HandleDef_Task1min;
+TIM_HandleTypeDef 	TIM_HandleDef_Task1sec;
+TIM_HandleTypeDef	TIM_HandleDef_Task1min;
 
 /*================================[Prototype function declarations]===================================================*/
 
-void TIM_Task1min_Init();
-
-
+void TIM_Task1Sec_Init();
+void TIM_Task1Min_Init();
 
 #endif /* INC_TIMERS_H_ */

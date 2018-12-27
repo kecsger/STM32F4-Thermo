@@ -42,6 +42,7 @@
 //extern UART_HandleTypeDef UART_HandleDef;
 
 uint16_t touchCnt = 0;
+uint8_t LCDScreenTouched_cnt;
 
 extern TIM_HandleTypeDef TIM_HandleDef_LCDFadeOut;
 extern TIM_HandleTypeDef TIM_HandleDef_LCDBcklight;
@@ -116,11 +117,10 @@ void AD7843_PenIRQHandler(void)
 
 	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_9) != RESET)
 	{
-		LCD_ScreenTouched();
-
-
-
-		while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == (uint8_t)RESET);
+		/* TODO: Kellene mérni egyet, h milyen fesz jel jön kijelzõ érintésekor */
+		LCDScreenTouched_cnt = SET;
+		//LCD_ScreenTouched();
+		//while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == (uint8_t)RESET);
 
 		//HAL_NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
 		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_9);
@@ -132,19 +132,28 @@ void AD7843_PenIRQHandler(void)
 
 void EXTI0_IRQHandler(void)
 {
+	static uint8_t buttonState;
+	static uint8_t buttonState_prev;
 
 	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != RESET)
 	{
-		LCD_BacklightWithPWM(1);
-
-		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_9);
+		buttonState = 1;
 	}
 
+	/* Debouncing */
+	if (buttonState == buttonState_prev)
+	{
+		buttonState = 0;
+		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
+		ButtonWasPressed();
+	}
+
+	buttonState_prev = buttonState;
 }
 
 void TIM2_IRQHandler(void)
 {
-	HAL_TIM_IRQHandler(&TIM_HandleDef_Task1min);
+	HAL_TIM_IRQHandler(&TIM_HandleDef_Task1sec);
 }
 
 void TIM4_IRQHandler(void)

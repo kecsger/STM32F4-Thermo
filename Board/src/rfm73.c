@@ -8,7 +8,7 @@
 /*================================[Includes] =========================================================================*/
 
 #include "rfm73.h"
-
+#include "Application.h"
 #include "led.h"
 
 /*================================[Macros]============================================================================*/
@@ -98,7 +98,7 @@ void RFM_Init()
 	RFM_GPIO_Init();
 
 	SPI_Init_GPIO(RFM_GPIO_PORT,RFM_MISO, RFM_MOSI, RFM_SCK, RFM_nSS);
-	SPI_Init_Config(SPI_RFM73, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 8000000);
+	SPI_Init_Config(SPI_RFM73, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, SPI_DATASIZE_8BIT, 8000000);
 
 	RFM_CE(0);
 	HAL_Delay(1);
@@ -207,8 +207,6 @@ uint8_t RFM_CheckStatus()
 	st1 = RFM_ReadReg(0, RFM_REG_STATUS);
 	RFM_WriteReg(0, RFM_ACTIVATE, 0x53);
 
-	HAL_Delay(10);
-
 	st2 = RFM_ReadReg(0, RFM_REG_STATUS);
 	RFM_WriteReg(0, RFM_ACTIVATE, 0x53);
 
@@ -314,7 +312,6 @@ uint8_t RFM_Receive(uint8_t *RX_buf)
 	if((STATUS_RX_DR & RFMstatus) == 0x40)
 	{
 		GreenLED_On();
-		HAL_Delay(100);
 
 		do
 		{
@@ -384,7 +381,6 @@ uint8_t RFM_Transmit(uint8_t reg, uint8_t *buffer, uint8_t length)
 	if((fifoStatus & FIFO_STATUS_TX_FULL) == 0)
 	{
 		GreenLED_On();
-		HAL_Delay(100);
 
 		RFM_WriteBuf(0, reg, buffer, length);
 
@@ -753,5 +749,15 @@ void RFM_GPIO_Init()
 	GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
 
 	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
+
+float RFM_GetTemperature()
+{
+	float tempretureRFM;
+
+	if(Rx_buf[0] != '\0')
+		tempretureRFM = 10 * (Rx_buf[0]-48) + (Rx_buf[1]-48) + ((Rx_buf[3]-48.0)/10.0);
+
+	return tempretureRFM;
 }
 

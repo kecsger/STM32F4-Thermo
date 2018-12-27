@@ -57,7 +57,7 @@ uint16_t ILI9341_Init()
 
 	/* Init SPI */
 	SPI_Init_GPIO(ILI9341_GPIO_PORT, ILI9341_MISO, ILI9341_MOSI, ILI9341_SCK, ILI9341_nSS);
-	SPI_Init_Config(SPI_ILI9341, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 11000000);
+	SPI_Init_Config(SPI_ILI9341, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, SPI_DATASIZE_8BIT, 10000000);
 
 	/* CS high */
 	ILI9341_SPI_nSS(1);
@@ -197,14 +197,14 @@ void ILI9341_InitLCD(void)
 void ILI9341_Reset()
 {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);  	// nRESET(1)
-	HAL_Delay(125);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);  // nRESET(0)
 	/* Delay for RST response */
-	HAL_Delay(10);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);		// nRESET(1)
 
 	/* It is necessary to wait 5msec after releasing /RES before sending commands */
-	HAL_Delay(125);
+	HAL_Delay(1);
 }
 
 uint16_t ILI9341_ReadID()
@@ -251,9 +251,23 @@ void ILI9341_SendData(uint8_t data)
 
 	/*TODO: BUSY figyeles!! */
 	SPIx_Write(SPI_ILI9341, data);
-	//SPI_Write(SPI_HandleDef_ILI9341, data);
 
 	ILI9341_SPI_nSS(1);
+}
+
+void ILI9341_SendMultipleData(uint16_t pData)
+{
+	uint32_t counter = 0;
+
+	ILI9341_DC(1);
+	ILI9341_SPI_nSS(0);
+
+	 uint8_t size = 2;
+	 uint32_t timeout = 1000;
+
+	 HAL_SPI_Transmit(&SPI_HandleDef_ILI9341, (uint8_t*)&pData, size, timeout);
+
+	 ILI9341_SPI_nSS(1);
 }
 
 void ILI9341_SendCommand(uint8_t data)
@@ -272,7 +286,6 @@ void ILI9341_SendCommand(uint8_t data)
 
 	/*TODO: BUSY figyeles!! */
 	SPIx_Write(SPI_ILI9341, data);
-	//SPI_Write(SPI_HandleDef_ILI9341, data);
 
 	ILI9341_SPI_nSS(1);
 	ILI9341_DC(1);
@@ -559,6 +572,9 @@ void ILI9341_DrawPixel(uint16_t x, uint16_t y, uint16_t color)
 	ILI9341_SendCommand(ILI9341_GRAM);
 	ILI9341_SendData(color >> 8);
 	ILI9341_SendData(color & 0xFF);
+
+	//ILI9341_SendMultipleData(color);
+	//TM_SPI_DMA_SendHalfWord(SPI_HandleDef_ILI9341.Instance, color, 2);
 }
 
 void ILI9341_Putc(uint16_t x, uint16_t y, char c, TM_FontDef_t *font, uint16_t foreground, uint16_t background)

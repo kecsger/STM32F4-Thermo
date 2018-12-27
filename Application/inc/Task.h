@@ -29,6 +29,8 @@
 
 void 		TaskManager();
 
+void		Task_1Seconds();
+void		Task_10Seconds();
 void 		Task_1minute();
 void 		Task_5minute();
 void 		Task_10minute();

@@ -15,12 +15,12 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-startup \
-src \
-Middlewares/ST/STemWin/OS \
-Middlewares/ST/STemWin/Config \
-HAL_Driver/Src \
-Fonts/src \
-Board/src \
 Application/src \
+Board/src \
+Fonts/src \
+HAL_Driver/Src \
+Middlewares/ST/STemWin/Config \
+Middlewares/ST/STemWin/OS \
+src \
+startup \
 

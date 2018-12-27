@@ -164,7 +164,7 @@ void 	RFM_Set_AutoRetransmit(uint16_t rt_time, uint8_t rt_count);
 void 	RFM_SetChanel(uint8_t chanel);
 
 
-
+float 	RFM_GetTemperature();
 
 
 
